@@ -10,8 +10,7 @@ import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
-
-import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 public class Event {
@@ -26,10 +25,11 @@ public class Event {
     private LocalDateTime dateTime;
 
     @ManyToMany(mappedBy = "events")
-    @JsonBackReference
+    @JsonIgnore
     private Set<User> participants = new HashSet<>();
 
-    public Event() {}
+    public Event() {
+    }
 
     public Event(UUID id, String title, String description, Boolean publicEvent, LocalDateTime dateTime,
             Set<User> participants) {
@@ -89,6 +89,4 @@ public class Event {
         this.participants = participants;
     }
 
-    
 }
-
