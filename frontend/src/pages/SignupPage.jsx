@@ -8,6 +8,8 @@ export default function SignupPage() {
   const [formData, setFormData] = useState({
     username: '',
     password: '',
+    email: '',
+    phone: '',
     role: 'USER',
     village: null 
   });
@@ -28,9 +30,29 @@ export default function SignupPage() {
         setError('Please select a valid village');
         return;
     }
+    if(!formData.email || !formData.phone || !formData.username){
+        setError('Please enter a valid username, email and phone number');
+        return;
+    }
+    if(!formData.password){
+        setError('Please enter a valid password');
+        return;
+    }
 
     try {
-      await signup(formData);
+      // Structure payload for backend
+      const payload = {
+          username: formData.username,
+          password: formData.password,
+          role: formData.role,
+          village: formData.village,
+          userInfo: {
+              email: formData.email,
+              phone: formData.phone
+          }
+      };
+      
+      await signup(payload);
       navigate('/login');
     } catch (err) {
       setError(err.message || 'Failed to sign up');
@@ -66,6 +88,38 @@ export default function SignupPage() {
                     onChange={handleChange}
                     className="mt-1 appearance-none block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                     placeholder="Choose a username"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                    Email
+                  </label>
+                  <input
+                    id="email"
+                    name="email"
+                    type="email"
+                    required
+                    value={formData.email}
+                    onChange={handleChange}
+                    className="mt-1 appearance-none block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                    placeholder="Enter your email"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
+                    Phone Number
+                  </label>
+                  <input
+                    id="phone"
+                    name="phone"
+                    type="tel"
+                    required
+                    value={formData.phone}
+                    onChange={handleChange}
+                    className="mt-1 appearance-none block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                    placeholder="Enter your phone number"
                   />
                 </div>
 
