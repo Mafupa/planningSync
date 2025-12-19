@@ -3,10 +3,17 @@ server.port=82
 
 spring.datasource.url=jdbc:postgresql://localhost:5432/planning_sync
 spring.datasource.username=postgres
-spring.datasource.password=What should i do?!
+spring.datasource.password=postgrespassword
 spring.datasource.driver-class-name=org.postgresql.Driver
 spring.jpa.hibernate.ddl-auto=update
 spring.jpa.show-sql=true
 spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
 
 server.error.include-message=always
+
+spring.mail.host=smtp.gmail.com
+spring.mail.port=587
+spring.mail.username=email@gmail.com
+spring.mail.password=aaaa bbbb cccc dddd
+spring.mail.properties.mail.smtp.auth=true
+spring.mail.properties.mail.smtp.starttls.enable=true

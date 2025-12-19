@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import auca.ac.rw.planningSync.model.User;
@@ -36,6 +37,19 @@ public class UserController {
     @DeleteMapping(value = "/{username}")
     public ResponseEntity<?> deleteUser(@PathVariable String username) {
         String message = userService.deleteUser(username);
+        return new ResponseEntity<>(message, HttpStatus.OK);
+    }
+
+    @PostMapping("/request-password-reset")
+    public ResponseEntity<?> requestReset(@RequestParam String email) {
+        String message = userService.requestPasswordReset(email);
+        return new ResponseEntity<>(message, HttpStatus.OK);
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> verifyOtp(@RequestParam String email, @RequestParam String password,
+            @RequestParam String otp) {
+        String message = userService.resetPassword(email, password, otp);
         return new ResponseEntity<>(message, HttpStatus.OK);
     }
 

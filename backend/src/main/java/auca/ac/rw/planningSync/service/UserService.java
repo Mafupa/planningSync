@@ -1,5 +1,9 @@
 package auca.ac.rw.planningSync.service;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -9,6 +13,7 @@ import auca.ac.rw.planningSync.model.Location;
 import auca.ac.rw.planningSync.model.User;
 import auca.ac.rw.planningSync.repository.LocationRepository;
 import auca.ac.rw.planningSync.repository.UserRepository;
+import auca.ac.rw.planningSync.util.OTPUtil;
 
 @Service
 public class UserService {
@@ -19,34 +24,36 @@ public class UserService {
     @Autowired
     private LocationRepository locationRepository;
 
-    public User getUser(String username){
+    @Autowired
+    private EmailService emailService;
+
+    private Map<String, String> passwordResetOtpStorage = new HashMap<>();
+
+    public User getUser(String username) {
         User user = userRepository.findByUsername(username)
-        .orElseThrow(() -> new ResponseStatusException(
-            HttpStatus.NOT_FOUND,
-            "User not found with username: " + username));
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "User not found with username: " + username));
         return user;
     }
-    
+
     public String registerUser(User user) {
         if (userRepository.existsByUsername(user.getUsername())) {
             throw new ResponseStatusException(
-                HttpStatus.CONFLICT,
-                "Username already exists"
-            );
+                    HttpStatus.CONFLICT,
+                    "Username already exists");
         }
 
         if (user.getVillage() == null || user.getVillage().getName() == null) {
             throw new ResponseStatusException(
-                HttpStatus.BAD_REQUEST,
-                "User must have a village name"
-            );
+                    HttpStatus.BAD_REQUEST,
+                    "User must have a village name");
         }
 
         Location village = locationRepository.findByName(user.getVillage().getName())
-            .orElseThrow(() -> new ResponseStatusException(
-                HttpStatus.NOT_FOUND,
-                "Provided village/location does not exist"
-            ));
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Provided village/location does not exist"));
 
         user.setVillage(village);
         userRepository.save(user);
@@ -56,12 +63,40 @@ public class UserService {
 
     public String deleteUser(String username) {
         User user = userRepository.findByUsername(username)
-        .orElseThrow(() -> new ResponseStatusException(
-            HttpStatus.NOT_FOUND,
-            "User not found with username: " + username));
-       
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "User not found with username: " + username));
+
         userRepository.delete(user);
 
-        return "User "+username+" deleted successfully!";
+        return "User " + username + " deleted successfully!";
+    }
+
+    public String requestPasswordReset(String email) {
+        Optional<User> userOpt = userRepository.findByUserInfoEmail(email);
+
+        if (!userOpt.isPresent()) {
+            return "email_not_found";
+        }
+        String otp = OTPUtil.generateOTP(6);
+        emailService.sendPasswordResetOTP(email, otp);
+        passwordResetOtpStorage.put(email, otp);
+
+        return "email_sent";
+    }
+
+    public String resetPassword(String email, String newPassword, String otp) {
+        if (!passwordResetOtpStorage.containsKey(email) || !passwordResetOtpStorage.get(email).equals(otp)) {
+            return "invalid_otp";
+        }
+        passwordResetOtpStorage.remove(email);
+        User user = userRepository.findByUserInfoEmail(email)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "User not found with email: " + email));
+        user.setPassword(newPassword);
+        userRepository.save(user);
+        passwordResetOtpStorage.remove(email);
+        return "password_reset";
     }
 }
