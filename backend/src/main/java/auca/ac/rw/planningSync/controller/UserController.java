@@ -15,30 +15,28 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
-
 @RestController
-@RequestMapping(value="/api/user")
+@RequestMapping(value = "/api/user")
 public class UserController {
     @Autowired
     private UserService userService;
 
-    @GetMapping(value="/{username}")
+    @GetMapping(value = "/{username}")
     public ResponseEntity<?> getUser(@PathVariable String username) {
         User user = userService.getUser(username);
         return new ResponseEntity<>(user, HttpStatus.OK);
     }
 
-    @PostMapping(value="/register")
-    public ResponseEntity<?> registerUser(@RequestBody User user){
+    @PostMapping(value = "/register")
+    public ResponseEntity<?> registerUser(@RequestBody User user) {
         String message = userService.registerUser(user);
         return new ResponseEntity<>(message, HttpStatus.OK);
     }
 
-    @DeleteMapping(value="/{username}")
-    public ResponseEntity<?> deleteUser(@PathVariable String username){
+    @DeleteMapping(value = "/{username}")
+    public ResponseEntity<?> deleteUser(@PathVariable String username) {
         String message = userService.deleteUser(username);
         return new ResponseEntity<>(message, HttpStatus.OK);
     }
-    
 
 }

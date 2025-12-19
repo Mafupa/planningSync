@@ -7,6 +7,8 @@ import SignupPage from './pages/SignupPage';
 import DashboardPage from './pages/DashboardPage';
 import EventsPage from './pages/EventsPage';
 import HabitsPage from './pages/HabitsPage';
+import AdminDashboardPage from './pages/AdminDashboardPage';
+import AdminManagePage from './pages/AdminManagePage';
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -39,6 +41,18 @@ function App() {
         <Route path="/habits" element={
           <ProtectedRoute>
             <HabitsPage />
+          </ProtectedRoute>
+        } />
+
+        {/* Admin Routes */}
+        <Route path="/admin" element={
+          <ProtectedRoute>
+            <AdminDashboardPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/manage" element={
+          <ProtectedRoute>
+            <AdminManagePage />
           </ProtectedRoute>
         } />
       </Routes>
