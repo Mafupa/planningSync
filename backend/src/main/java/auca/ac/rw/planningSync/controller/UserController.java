@@ -92,4 +92,9 @@ public class UserController {
         return new ResponseEntity<>(token, HttpStatus.OK);
     }
 
+    @GetMapping("/count")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> getUserCount() {
+        return new ResponseEntity<>(userService.countUsers(), HttpStatus.OK);
+    }
 }

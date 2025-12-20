@@ -175,4 +175,8 @@ public class UserService {
         twoFactorOtpStorage.remove(username);
         return jwtService.generateToken(username);
     }
+
+    public long countUsers() {
+        return userRepository.count();
+    }
 }

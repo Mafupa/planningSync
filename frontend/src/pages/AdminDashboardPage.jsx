@@ -13,16 +13,16 @@ const AdminDashboardPage = () => {
     const fetchStats = async () => {
         try {
             const [usersRes, locationsRes] = await Promise.all([
-                authFetch('/api/user/all').catch(() => ({ ok: false })),
-                authFetch('/api/location/all').catch(() => ({ ok: false }))
+                authFetch('/api/user/count').catch(() => ({ ok: false })),
+                authFetch('/api/location/count').catch(() => ({ ok: false }))
             ]);
 
-            const users = usersRes.ok ? await usersRes.json() : [];
-            const locations = locationsRes.ok ? await locationsRes.json() : [];
+            const users = usersRes.ok ? await usersRes.json() : 0;
+            const locations = locationsRes.ok ? await locationsRes.json() : 0;
 
             setStats({
-                users: Array.isArray(users) ? users.length : 0,
-                locations: Array.isArray(locations) ? locations.length : 0,
+                users: typeof users === 'number' ? users : 0,
+                locations: typeof locations === 'number' ? locations : 0,
                 events: 0
             });
         } catch (error) {

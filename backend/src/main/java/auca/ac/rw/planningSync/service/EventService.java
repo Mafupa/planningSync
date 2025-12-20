@@ -22,37 +22,34 @@ public class EventService {
     @Autowired
     private UserRepository userRepository;
 
-    public String createEvent(UUID userId, Event event){
+    public String createEvent(UUID userId, Event event) {
         User user = userRepository.findById(userId)
-        .orElseThrow(() -> new ResponseStatusException(
-            HttpStatus.NOT_FOUND,
-            "No user with this ID found"
-        ));
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "No user with this ID found"));
         event.getParticipants().add(user);
         user.getEvents().add(event);
 
         eventRepository.save(event);
-        return "Event "+event.getTitle()+" saved successfully!";
+        return "Event " + event.getTitle() + " saved successfully!";
     }
 
     public Event getEvent(UUID eventId) {
         return eventRepository.findById(eventId)
-        .orElseThrow(() -> new ResponseStatusException(
-            HttpStatus.NOT_FOUND,
-            "Event with ID " + eventId + " not found"
-        ));
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Event with ID " + eventId + " not found"));
     }
 
-    public List<Event> getPublicEvents(){
+    public List<Event> getPublicEvents() {
         return eventRepository.findByPublicEventTrue();
     }
 
     public String updateEvent(UUID eventId, Event eventInfo) {
         Event event = eventRepository.findById(eventId)
-        .orElseThrow(() -> new ResponseStatusException(
-            HttpStatus.NOT_FOUND,
-            "Event with ID " + eventId + " not found"
-        ));
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Event with ID " + eventId + " not found"));
 
         event.setTitle(eventInfo.getTitle());
         event.setDescription(eventInfo.getDescription());
@@ -65,32 +62,29 @@ public class EventService {
 
     public String deleteEvent(UUID eventId) {
         Event event = eventRepository.findById(eventId)
-        .orElseThrow(() -> new ResponseStatusException(
-            HttpStatus.NOT_FOUND,
-            "Event with ID " + eventId + " not found"
-        ));
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Event with ID " + eventId + " not found"));
 
         eventRepository.delete(event);
         return "Event " + event.getTitle() + " deleted successfully!";
     }
 
-
     public String addUserToEvent(UUID userId, UUID eventId) {
         User user = userRepository.findById(userId)
-        .orElseThrow(() -> new ResponseStatusException(
-            HttpStatus.NOT_FOUND,
-            "User with ID " + userId + " not found"));
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "User with ID " + userId + " not found"));
 
         Event event = eventRepository.findById(eventId)
-        .orElseThrow(() -> new ResponseStatusException(
-            HttpStatus.NOT_FOUND,
-            "Event with ID " + eventId + " not found"));
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Event with ID " + eventId + " not found"));
 
         if (event.getParticipants().contains(user)) {
             throw new ResponseStatusException(
-                HttpStatus.BAD_REQUEST,
-                "User '" + user.getUsername() + "' is already attending event '" + event.getTitle() + "'"
-            );
+                    HttpStatus.BAD_REQUEST,
+                    "User '" + user.getUsername() + "' is already attending event '" + event.getTitle() + "'");
         }
 
         event.getParticipants().add(user);
@@ -104,20 +98,17 @@ public class EventService {
 
     public String removeUserFromEvent(UUID userId, UUID eventId) {
         User user = userRepository.findById(userId)
-        .orElseThrow(() -> new ResponseStatusException(
-            HttpStatus.NOT_FOUND, "User with ID " + userId + " not found"
-        ));
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "User with ID " + userId + " not found"));
 
         Event event = eventRepository.findById(eventId)
-        .orElseThrow(() -> new ResponseStatusException(
-            HttpStatus.NOT_FOUND, "Event with ID " + eventId + " not found"
-        ));
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Event with ID " + eventId + " not found"));
 
         if (!event.getParticipants().contains(user)) {
             throw new ResponseStatusException(
-                HttpStatus.BAD_REQUEST,
-                "User '" + user.getUsername() + "' is not attending event '" + event.getTitle() + "'"
-            );
+                    HttpStatus.BAD_REQUEST,
+                    "User '" + user.getUsername() + "' is not attending event '" + event.getTitle() + "'");
         }
 
         event.getParticipants().remove(user);
@@ -131,11 +122,12 @@ public class EventService {
 
     public Set<Event> getUserEvents(UUID userId) {
         User user = userRepository.findById(userId)
-        .orElseThrow(() -> new ResponseStatusException(
-            HttpStatus.NOT_FOUND, "User with ID " + userId + " not found"
-        ));
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "User with ID " + userId + " not found"));
         return user.getEvents();
     }
 
-    
+    public long countEvents() {
+        return eventRepository.count();
+    }
 }

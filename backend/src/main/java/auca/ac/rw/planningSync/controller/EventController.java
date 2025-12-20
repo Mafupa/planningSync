@@ -7,6 +7,7 @@ import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -25,7 +26,7 @@ public class EventController {
     @Autowired
     private EventService eventService;
 
-    @GetMapping(value="/")
+    @GetMapping(value = "/")
     public ResponseEntity<?> getPublicEvents() {
         List<Event> events = eventService.getPublicEvents();
         return new ResponseEntity<>(events, HttpStatus.OK);
@@ -49,13 +50,13 @@ public class EventController {
         return new ResponseEntity<>(message, HttpStatus.OK);
     }
 
-    @PostMapping(value="/create/{userId}")
-    public ResponseEntity<?> saveEvent(@PathVariable UUID userId, @RequestBody Event event){
+    @PostMapping(value = "/create/{userId}")
+    public ResponseEntity<?> saveEvent(@PathVariable UUID userId, @RequestBody Event event) {
         String message = eventService.createEvent(userId, event);
         return new ResponseEntity<>(message, HttpStatus.OK);
     }
 
-    @PostMapping(value="/{eventId}/join/{userId}")
+    @PostMapping(value = "/{eventId}/join/{userId}")
     public ResponseEntity<?> addUserToEvent(
             @PathVariable UUID userId,
             @PathVariable UUID eventId) {
@@ -63,7 +64,7 @@ public class EventController {
         return new ResponseEntity<>(message, HttpStatus.OK);
     }
 
-    @DeleteMapping(value="/{eventId}/leave/{userId}")
+    @DeleteMapping(value = "/{eventId}/leave/{userId}")
     public ResponseEntity<?> removeUserFromEvent(
             @PathVariable UUID userId,
             @PathVariable UUID eventId) {
@@ -71,9 +72,15 @@ public class EventController {
         return new ResponseEntity<>(message, HttpStatus.OK);
     }
 
-    @GetMapping(value="/user/{userId}")
+    @GetMapping(value = "/user/{userId}")
     public ResponseEntity<Set<Event>> getUserEvents(@PathVariable UUID userId) {
         Set<Event> events = eventService.getUserEvents(userId);
         return new ResponseEntity<>(events, HttpStatus.OK);
+    }
+
+    @GetMapping(value = "/count")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> getEventCount() {
+        return new ResponseEntity<>(eventService.countEvents(), HttpStatus.OK);
     }
 }

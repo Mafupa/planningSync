@@ -149,4 +149,8 @@ public class LocationService {
     public List<Location> getAllLocations() {
         return locationRepository.findAll();
     }
+
+    public long countLocations() {
+        return locationRepository.count();
+    }
 }
