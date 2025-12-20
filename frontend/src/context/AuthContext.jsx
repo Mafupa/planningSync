@@ -33,6 +33,10 @@ export const AuthProvider = ({ children }) => {
 
       const token = await loginResponse.text();
 
+      if (token === '2FA_REQUIRED') {
+         return { status: '2FA_REQUIRED', username };
+      }
+
       localStorage.setItem('token', token);
 
       const userResponse = await authFetch(`/api/user/${username}`);
@@ -52,12 +56,50 @@ export const AuthProvider = ({ children }) => {
 
       setUser(userData);
       localStorage.setItem('user', JSON.stringify(userData));
-      navigate('/');
-      return true;
+      if(userData.role === 'ADMIN') {
+        navigate('/admin');
+      } else {
+        navigate('/');
+      }
+      return { status: 'SUCCESS' };
     } catch (error) {
       console.error("Login error:", error);
       throw error;
     }
+  };
+
+  const verify2FA = async (username, otp) => {
+      try {
+        const response = await fetch(`/api/user/verify-2fa?username=${username}&otp=${otp}`, {
+            method: 'POST'
+        });
+
+        if (!response.ok) {
+            throw new Error('Invalid OTP');
+        }
+
+        const token = await response.text();
+        localStorage.setItem('token', token);
+
+        const userResponse = await authFetch(`/api/user/${username}`);
+        if (!userResponse.ok) { throw new Error('Failed to fetch user details'); }
+        
+        const backendUser = await userResponse.json();
+        const userData = {
+             id: backendUser.id,
+             username: backendUser.username,
+             role: backendUser.role,
+             village: backendUser.village,
+        };
+
+        setUser(userData);
+        localStorage.setItem('user', JSON.stringify(userData));
+        navigate('/');
+        return true;
+      } catch (error) {
+          console.error("2FA Verification error:", error);
+          throw error;
+      }
   };
 
   const signup = async (userData) => {
@@ -89,7 +131,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, signup, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, signup, logout, loading, verify2FA }}>
       {children}
     </AuthContext.Provider>
   );

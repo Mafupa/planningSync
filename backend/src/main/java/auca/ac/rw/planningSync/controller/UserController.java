@@ -67,4 +67,13 @@ public class UserController {
         return new ResponseEntity<>(userService.getAllUsers(), HttpStatus.OK);
     }
 
+    @PostMapping("/verify-2fa")
+    public ResponseEntity<?> verifyTwoFactor(@RequestParam String username, @RequestParam String otp) {
+        String token = userService.verifyTwoFactor(username, otp);
+        if ("invalid_otp".equals(token)) {
+            return new ResponseEntity<>("Invalid OTP", HttpStatus.BAD_REQUEST);
+        }
+        return new ResponseEntity<>(token, HttpStatus.OK);
+    }
+
 }

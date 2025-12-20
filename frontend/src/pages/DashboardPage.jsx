@@ -50,7 +50,7 @@ export default function DashboardPage() {
         <p className="mt-1 text-sm text-gray-500">Here's what's happening today.</p>
       </header>
 
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         {/* Quick Stats */}
         <div className="bg-white overflow-hidden shadow rounded-lg">
           <div className="px-4 py-5 sm:p-6">

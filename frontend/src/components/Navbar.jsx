@@ -36,7 +36,7 @@ const Navbar = () => {
         <div className="flex justify-between h-16">
           <div className="flex">
             <div className="flex-shrink-0 flex items-center">
-              <Link to="/" className="text-xl font-bold text-indigo-600 tracking-tight">PlanningSync</Link>
+              <h1 className="text-xl font-bold text-indigo-600 tracking-tight">PlanningSync</h1>
             </div>
             {user && (
                 <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
@@ -50,8 +50,10 @@ const Navbar = () => {
                             <NavLink to="/">Dashboard</NavLink>
                             <NavLink to="/events">Events</NavLink>
                             <NavLink to="/habits">Habits</NavLink>
+                            
                         </>
                     )}
+                    <NavLink to="/settings">Settings</NavLink>
                 </div>
             )}
           </div>

@@ -20,13 +20,10 @@ public class UserInfo {
     private String email;
     private String phone;
 
-
     @OneToOne
     @JoinColumn(name = "user_id", referencedColumnName = "id")
     @JsonIgnore
     private User user;
-
-   
 
     public UserInfo() {
     }
@@ -53,6 +50,16 @@ public class UserInfo {
         this.email = email;
     }
 
+    private boolean twoFactorEnabled;
+
+    public boolean isTwoFactorEnabled() {
+        return twoFactorEnabled;
+    }
+
+    public void setTwoFactorEnabled(boolean twoFactorEnabled) {
+        this.twoFactorEnabled = twoFactorEnabled;
+    }
+
     public String getPhone() {
         return phone;
     }
@@ -60,7 +67,6 @@ public class UserInfo {
     public void setPhone(String phone) {
         this.phone = phone;
     }
-    
 
     public User getUser() {
         return user;

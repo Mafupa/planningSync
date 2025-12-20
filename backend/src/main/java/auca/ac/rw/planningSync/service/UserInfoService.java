@@ -18,26 +18,26 @@ public class UserInfoService {
     @Autowired
     private UserInfoRepository userInfoRepository;
 
-    public UserInfo getUserInfo(String username){
+    public UserInfo getUserInfo(String username) {
         User user = userRepository.findByUsername(username)
-        .orElseThrow(() -> new ResponseStatusException(
-            HttpStatus.NOT_FOUND,
-            "User not found with username: " + username));
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "User not found with username: " + username));
         return userInfoRepository.findByUserId(user.getId())
-            .orElseThrow(() -> new RuntimeException("UserInfo not found for user: " + username));
+                .orElseThrow(() -> new RuntimeException("UserInfo not found for user: " + username));
     }
 
-    public String addOrUpdateUserInfo(String username, UserInfo newInfo){
+    public String addOrUpdateUserInfo(String username, UserInfo newInfo) {
         User user = userRepository.findByUsername(username)
-        .orElseThrow(() -> new ResponseStatusException(
-            HttpStatus.NOT_FOUND,
-            "No user with this username!"
-        ));
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "No user with this username!"));
 
         UserInfo userInfo = userInfoRepository.findByUserId(user.getId()).orElse(new UserInfo());
 
         userInfo.setEmail(newInfo.getEmail());
         userInfo.setPhone(newInfo.getPhone());
+        userInfo.setTwoFactorEnabled(newInfo.isTwoFactorEnabled());
 
         userInfo.setUser(user);
         user.setUserInfo(userInfo);
@@ -49,13 +49,13 @@ public class UserInfoService {
 
     public String deleteUserInfo(String username) {
         User user = userRepository.findByUsername(username)
-        .orElseThrow(() -> new ResponseStatusException(
-            HttpStatus.NOT_FOUND,
-            "User not found with username: " + username));
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "User not found with username: " + username));
         UserInfo userInfo = userInfoRepository.findByUserId(user.getId())
-        .orElseThrow(() -> new ResponseStatusException(
-            HttpStatus.NOT_FOUND,
-            "UserInfo not found for user: " + username));
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "UserInfo not found for user: " + username));
 
         userInfoRepository.delete(userInfo);
 
@@ -64,5 +64,5 @@ public class UserInfoService {
 
         return "User info deleted successfully for user: " + username;
     }
-    
+
 }

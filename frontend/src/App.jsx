@@ -9,6 +9,7 @@ import EventsPage from './pages/EventsPage';
 import HabitsPage from './pages/HabitsPage';
 import AdminDashboardPage from './pages/AdminDashboardPage';
 import AdminManagePage from './pages/AdminManagePage';
+import SettingsPage from './pages/SettingsPage';
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -41,6 +42,12 @@ function App() {
         <Route path="/habits" element={
           <ProtectedRoute>
             <HabitsPage />
+          </ProtectedRoute>
+        } />
+
+        <Route path="/settings" element={
+          <ProtectedRoute>
+            <SettingsPage />
           </ProtectedRoute>
         } />
 

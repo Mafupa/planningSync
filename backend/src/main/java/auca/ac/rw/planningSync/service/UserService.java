@@ -38,6 +38,7 @@ public class UserService {
     private JWTService jwtService;
 
     private Map<String, String> passwordResetOtpStorage = new HashMap<>();
+    private Map<String, String> twoFactorOtpStorage = new HashMap<>();
 
     public User getUser(String username) {
         User user = userRepository.findByUsername(username)
@@ -78,6 +79,18 @@ public class UserService {
         Authentication authentication = authManager.authenticate(
                 new UsernamePasswordAuthenticationToken(username, password));
         if (authentication.isAuthenticated()) {
+            User user = userRepository.findByUsername(username).orElseThrow();
+            if (user.getUserInfo() != null && user.getUserInfo().isTwoFactorEnabled()) {
+                String otp = OTPUtil.generateOTP(6);
+                String email = user.getUserInfo().getEmail();
+                if (email == null) {
+                    return jwtService.generateToken(username); // Fallback if no email? Or error? For now fallback or
+                                                               // logic to fetch email safely
+                }
+                emailService.sendLoginOTP(email, otp);
+                twoFactorOtpStorage.put(username, otp);
+                return "2FA_REQUIRED";
+            }
             return jwtService.generateToken(username);
         }
         return "Invalid credentials";
@@ -124,5 +137,13 @@ public class UserService {
 
     public java.util.List<User> getAllUsers() {
         return userRepository.findAll();
+    }
+
+    public String verifyTwoFactor(String username, String otp) {
+        if (!twoFactorOtpStorage.containsKey(username) || !twoFactorOtpStorage.get(username).equals(otp)) {
+            return "invalid_otp";
+        }
+        twoFactorOtpStorage.remove(username);
+        return jwtService.generateToken(username);
     }
 }
