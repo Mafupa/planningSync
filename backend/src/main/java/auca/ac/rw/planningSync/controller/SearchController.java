@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -41,8 +42,10 @@ public class SearchController {
 
         // 1. Search Events
         List<Event> events = eventRepository.findByTitleContainingIgnoreCaseAndParticipantsUsername(query, username);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         for (Event e : events) {
-            results.add(new SearchResultDTO("EVENT", e.getTitle(), e.getDescription(), "/events"));
+            String dateParam = e.getDateTime().format(formatter);
+            results.add(new SearchResultDTO("EVENT", e.getTitle(), e.getDescription(), "/events?date=" + dateParam));
         }
 
         // 2. Search Habits

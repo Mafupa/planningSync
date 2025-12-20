@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 import { authFetch } from '../utils/api';
@@ -11,6 +12,7 @@ const CalendarIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" he
 
 export default function EventsPage() {
   const { user } = useAuth();
+  const [searchParams] = useSearchParams();
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   
@@ -43,6 +45,17 @@ export default function EventsPage() {
   useEffect(() => {
     if (user) fetchEvents();
   }, [user]);
+
+  useEffect(() => {
+    const dateParam = searchParams.get('date');
+    if (dateParam) {
+      const parsedDate = new Date(dateParam);
+      if (!isNaN(parsedDate.getTime())) {
+        setSelectedDate(parsedDate);
+        setCurrentDate(new Date(parsedDate.getFullYear(), parsedDate.getMonth(), 1));
+      }
+    }
+  }, [searchParams]);
 
   const openModal = (event = null) => {
     if (event) {
