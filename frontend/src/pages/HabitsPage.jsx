@@ -10,6 +10,7 @@ export default function HabitsPage() {
   const [streaks, setStreaks] = useState({}); // { habitId: number }
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [habitToDelete, setHabitToDelete] = useState(null);
   
   // Form state
   const [formData, setFormData] = useState({
@@ -94,6 +95,21 @@ export default function HabitsPage() {
       }
     } catch (error) {
       console.error("Error creating habit:", error);
+    }
+  };
+
+  const handleDeleteHabit = async () => {
+    if (!habitToDelete) return;
+    try {
+      const res = await authFetch(`/api/habits/${habitToDelete.id}`, {
+        method: 'DELETE'
+      });
+      if (res.ok) {
+        setHabitToDelete(null);
+        fetchHabits();
+      }
+    } catch (error) {
+      console.error("Error deleting habit:", error);
     }
   };
 
@@ -215,6 +231,8 @@ export default function HabitsPage() {
                   isDoneToday ? 'border-emerald-100 bg-emerald-50/10' : 'border-gray-100'
                 }`}
               >
+                
+
                 <div className="flex flex-col h-full">
                   <div className="flex items-start justify-between mb-4">
                     <div className={`p-2 rounded-xl ${isDoneToday ? 'bg-emerald-100 text-emerald-600' : 'bg-indigo-50 text-indigo-600'}`}>
@@ -228,7 +246,7 @@ export default function HabitsPage() {
                         </svg>
                       )}
                     </div>
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center space-x-2 gap-2">
                         {streak > 0 && (
                             <span 
                                 className="flex items-center text-xs font-bold text-white px-2 py-1 rounded-lg"
@@ -250,10 +268,22 @@ export default function HabitsPage() {
                         }`}>
                         {habit.recurrenceType}
                         </span>
+                        {/* Delete Button */}
+                        <span className="px-2 py-1">
+                          <button
+                            onClick={() => setHabitToDelete(habit)}
+                            className="absolute top-4 right-4 p-2 text-gray-300 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+                            title="Delete habit"
+                          >
+                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          </button>
+                        </span>
                     </div>
                   </div>
                   
-                  <h3 className="text-xl font-bold text-gray-900 mb-2 truncate group-hover:text-indigo-600 transition-colors">
+                  <h3 className="text-xl font-bold text-gray-900 mb-2 truncate pr-8 group-hover:text-indigo-600 transition-colors">
                     {habit.name}
                   </h3>
                   <p className="text-sm text-gray-500 mb-6 line-clamp-2 min-h-[2.5rem]">
@@ -294,6 +324,40 @@ export default function HabitsPage() {
           </div>
         )}
       </div>
+
+      {/* Deletion Confirmation Modal */}
+      {habitToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-8 animate-in zoom-in-95 slide-in-from-bottom-4 duration-300">
+            <div className="w-16 h-16 bg-rose-100 text-rose-600 rounded-2xl flex items-center justify-center mb-6 mx-auto">
+              <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </div>
+            
+            <h3 className="text-2xl font-bold text-gray-900 text-center mb-2">Delete Habit?</h3>
+            <p className="text-gray-500 text-center mb-8">
+              Are you sure you want to delete <span className="font-semibold text-gray-900">"{habitToDelete.name}"</span>? 
+              This will also remove all your progress logs for this habit.
+            </p>
+            
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={handleDeleteHabit}
+                className="w-full py-4 px-6 bg-rose-600 text-white font-bold rounded-xl hover:bg-rose-700 transition-all shadow-lg shadow-rose-100"
+              >
+                Yes, Delete it
+              </button>
+              <button
+                onClick={() => setHabitToDelete(null)}
+                className="w-full py-4 px-6 bg-gray-100 text-gray-600 font-bold rounded-xl hover:bg-gray-200 transition-all"
+              >
+                No, Keep it
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

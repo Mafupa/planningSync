@@ -2,12 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 
 import { authFetch } from '../utils/api';
+import Button from '../components/Button';
 
-// Inline Icons (replacing lucide-react)
+// Inline Icons
 const ChevronLeft = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>;
 const ChevronRight = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>;
-const XIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 18 12"/></svg>;
-const Clock = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>;
 const CalendarIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>;
 
 export default function EventsPage() {
@@ -21,6 +20,7 @@ export default function EventsPage() {
   
   // Modal State
   const [showModal, setShowModal] = useState(false);
+  const [editingEvent, setEditingEvent] = useState(null);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -46,6 +46,29 @@ export default function EventsPage() {
   useEffect(() => {
     if (user) fetchEvents();
   }, [user]);
+
+  const openModal = (event = null) => {
+    if (event) {
+        const eventDate = new Date(event.dateTime);
+        setEditingEvent(event);
+        setFormData({
+            title: event.title,
+            description: event.description,
+            time: eventDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }),
+            publicEvent: event.publicEvent
+        });
+    } else {
+        setEditingEvent(null);
+        setFormData({ title: '', description: '', time: '09:00', publicEvent: false });
+    }
+    setShowModal(true);
+  };
+
+  const closeModal = () => {
+    setShowModal(false);
+    setEditingEvent(null);
+    setFormData({ title: '', description: '', time: '09:00', publicEvent: false });
+  };
 
   // Calendar Logic
   const daysInMonth = (date) => new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
@@ -79,9 +102,6 @@ export default function EventsPage() {
     const eventDateTime = new Date(selectedDate);
     eventDateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
 
-    // Format to ISO string but strip the 'Z' to match LocalDateTime if backend expects local time
-    // Or just send standard ISO. Spring Boot often prefers 'yyyy-MM-ddTHH:mm:ss' for LocalDateTime.
-    // '2023-10-27T09:00:00.000'
     const isoDateTime = eventDateTime.toISOString().slice(0, 19); 
 
     const payload = {
@@ -92,34 +112,39 @@ export default function EventsPage() {
     };
 
     try {
-      // Create event (using POST /create/{userId} from controller)
-      const res = await authFetch(`/api/event/create/${user.id}`, {
-        method: 'POST',
+      const url = editingEvent 
+        ? `/api/event/${editingEvent.id}` 
+        : `/api/event/create/${user.id}`;
+      const method = editingEvent ? 'PUT' : 'POST';
+
+      const res = await authFetch(url, {
+        method,
         headers: { 
             'Content-Type': 'application/json',
             'Accept': 'application/json'
         },
         body: JSON.stringify(payload)
       });
+
       if (res.ok) {
-        setShowModal(false);
-        setFormData({ title: '', description: '', time: '09:00', publicEvent: false });
+        closeModal();
         fetchEvents();
       } else {
-          console.error("Failed to create event:", res.status, res.statusText);
-          const txt = await res.text();
-          console.error("Response:", txt);
+          console.error("Failed to save event:", res.status);
       }
     } catch (error) {
-      console.error("Error creating event:", error);
+      console.error("Error saving event:", error);
     }
   };
 
-  const handleDelete = async (eventId) => {
-      if(!confirm("Are you sure you want to delete this event?")) return;
+  const handleDelete = async () => {
+      if(!editingEvent || !confirm("Are you sure you want to delete this event?")) return;
       try {
-          const res = await authFetch(`/api/event/${eventId}`, { method: 'DELETE' });
-          if(res.ok) fetchEvents();
+          const res = await authFetch(`/api/event/${editingEvent.id}`, { method: 'DELETE' });
+          if(res.ok) {
+              closeModal();
+              fetchEvents();
+          }
       } catch (err) {
           console.error("Failed to delete", err);
       }
@@ -208,106 +233,139 @@ export default function EventsPage() {
              </h3>
          </div>
 
-         <div className="flex-1 overflow-y-auto p-4 space-y-3">
+         <div className="flex-1 overflow-y-auto p-4 space-y-4">
              {getEventsForDate(selectedDate).length === 0 ? (
-                 <div className="flex flex-col items-center justify-center h-40 text-gray-400">
-                     <div className="opacity-50 mb-2"><CalendarIcon /></div>
-                     <p className="text-sm">No events scheduled.</p>
-                 </div>
-             ) : (
-                getEventsForDate(selectedDate).map(event => (
-                    <div key={event.id} className="group p-4 bg-gray-50 hover:bg-white border hover:border-indigo-200 rounded-xl transition-all shadow-sm hover:shadow-md">
-                        <div className="flex justify-between items-start">
-                            <h4 className="font-semibold text-gray-900 line-clamp-1">{event.title}</h4>
-                            <button onClick={() => handleDelete(event.id)} className="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-600 transition-opacity p-1">
-                                <div className="w-4 h-4"><XIcon /></div>
-                            </button>
-                        </div>
-                        <p className="text-xs text-gray-500 mt-1 line-clamp-2">{event.description}</p>
-                        <div className="mt-3 flex items-center gap-3 text-xs text-gray-500">
-                            <div className="flex items-center gap-1">
-                                <div className="w-3.5 h-3.5"><Clock /></div>
-                                {new Date(event.dateTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  <div className="flex flex-col items-center justify-center h-40 text-gray-400">
+                      <div className="opacity-50 mb-2"><CalendarIcon /></div>
+                      <p className="text-sm">No events scheduled.</p>
+                  </div>
+              ) : (
+                 getEventsForDate(selectedDate).map(event => (
+                    <button 
+                        key={event.id} 
+                        onClick={() => openModal(event)}
+                        className="w-full text-left group p-4 bg-white hover:bg-indigo-50/30 border border-gray-100 hover:border-indigo-200 rounded-2xl transition-all shadow-sm hover:shadow-md flex items-start gap-4 relative overflow-hidden"
+                    >
+                        {/* Status bar */}
+                        <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-indigo-500 transform -translate-x-1 group-hover:translate-x-0 transition-transform"></div>
+                        
+                        <div className="flex-1">
+                            <div className="flex justify-between items-start">
+                                <h4 className="font-bold text-gray-900 group-hover:text-indigo-700 transition-colors">{event.title}</h4>
                             </div>
-                            {event.publicEvent && (
-                                <span className="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full text-[10px] font-medium">Public</span>
-                            )}
+                            <p className="text-xs text-gray-500 mt-1 line-clamp-2 leading-relaxed">
+                                {event.description || "No description provided."}
+                            </p>
+                            <div className="mt-4 flex items-center gap-4 text-[11px] font-bold uppercase tracking-wider text-gray-400">
+                                <div className="flex items-center gap-1.5 px-2 py-1 bg-gray-50 rounded-lg group-hover:bg-white transition-colors">
+                                    {new Date(event.dateTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                </div>
+                                {event.publicEvent && (
+                                    <span className="bg-blue-50 text-blue-600 px-2 py-1 rounded-lg">Public Event</span>
+                                )}
+                            </div>
                         </div>
-                    </div>
-                ))
-             )}
+                    </button>
+                 ))
+              )}
          </div>
 
-         <div className="p-4 border-t border-gray-100 bg-gray-50">
+         <div className="p-4 border-t border-gray-100 bg-gray-50/50">
              <button
-               onClick={() => setShowModal(true)}
-               className="w-full py-3 bg-indigo-600 text-white rounded-xl shadow-lg hover:bg-indigo-700 hover:shadow-xl hover:-translate-y-0.5 transition-all font-medium flex items-center justify-center gap-2"
+               onClick={() => openModal()}
+               className="w-full py-4 bg-indigo-600 text-white rounded-2xl shadow-lg shadow-indigo-100 hover:bg-indigo-700 hover:shadow-xl hover:-translate-y-0.5 transition-all font-bold flex items-center justify-center gap-2"
              >
-                 <span>+</span> Add Event
+                 <span className="text-xl">+</span> Add New Event
              </button>
          </div>
       </div>
 
-      {/* Add Event Modal */}
+      {/* Unified Event Modal */}
       {showModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-              <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
-                  <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-                      <h3 className="font-bold text-gray-900">Add Event for {selectedDate.toLocaleDateString()}</h3>
-                      <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-gray-600"><XIcon /></button>
-                  </div>
-                  <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+              <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-8 duration-300">
+                  <div className="px-8 py-6 border-b border-gray-50 flex justify-between items-center bg-gray-50/50">
                       <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Event Title</label>
+                        <h3 className="text-xl font-extrabold text-gray-900">
+                            {editingEvent ? 'Edit Event' : 'New Event'}
+                        </h3>
+                        <p className="text-sm text-gray-500 font-medium">
+                            {selectedDate.toLocaleDateString('default', { month: 'long', day: 'numeric', year: 'numeric' })}
+                        </p>
+                      </div>
+                      <div className="w-12">
+                        <Button onClick={closeModal} variant='secondary'>Close</Button>
+                      </div>
+                  </div>
+                  
+                  <form onSubmit={handleSubmit} className="p-8 space-y-6">
+                      <div>
+                          <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Event Title</label>
                           <input
                             type="text"
                             required
                             value={formData.title}
                             onChange={(e) => setFormData({...formData, title: e.target.value})}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
-                            placeholder="e.g. Team Meeting"
+                            className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-medium text-gray-900"
+                            placeholder="What's happening?"
                           />
                       </div>
                       <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                          <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Description</label>
                           <textarea
                              rows={3}
                              value={formData.description}
                              onChange={(e) => setFormData({...formData, description: e.target.value})}
-                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
-                             placeholder="Details about the event..."
+                             className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-medium text-gray-900 resize-none"
+                             placeholder="Add some details..."
                           />
                       </div>
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-2 gap-6">
                           <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-1">Time</label>
+                              <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Start Time</label>
                               <input
                                 type="time"
                                 required
                                 value={formData.time}
                                 onChange={(e) => setFormData({...formData, time: e.target.value})}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+                                className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-medium text-gray-900"
                               />
                           </div>
                           <div className="flex items-center pt-6">
-                              <label className="flex items-center cursor-pointer">
-                                  <input
-                                    type="checkbox"
-                                    checked={formData.publicEvent}
-                                    onChange={(e) => setFormData({...formData, publicEvent: e.target.checked})}
-                                    className="w-4 h-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                                  />
-                                  <span className="ml-2 text-sm text-gray-700">Make Public</span>
+                              <label className="flex items-center group cursor-pointer">
+                                  <div className="relative">
+                                    <input
+                                        type="checkbox"
+                                        checked={formData.publicEvent}
+                                        onChange={(e) => setFormData({...formData, publicEvent: e.target.checked})}
+                                        className="sr-only"
+                                    />
+                                    <div className={`w-10 h-6 rounded-full transition-colors ${formData.publicEvent ? 'bg-indigo-600' : 'bg-gray-200'}`}></div>
+                                    <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${formData.publicEvent ? 'translate-x-4' : ''}`}></div>
+                                  </div>
+                                  <span className="ml-3 text-sm font-bold text-gray-700 group-hover:text-indigo-600 transition-colors">Public Event</span>
                               </label>
                           </div>
                       </div>
-                      <div className="pt-4">
+                      
+                      <div className="flex flex-col gap-3 pt-4">
                           <button
                             type="submit"
-                            className="w-full py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium transition shadow-sm"
+                            className="w-full py-4 bg-indigo-600 text-white rounded-2xl hover:bg-indigo-700 font-bold transition-all shadow-lg shadow-indigo-100 active:scale-[0.98]"
                           >
-                            Create Event
+                            {editingEvent ? 'Save Changes' : 'Create Event'}
                           </button>
+                          
+                          {editingEvent && (
+                              <button
+                                type="button"
+                                onClick={handleDelete}
+                                className="w-full py-4 bg-rose-50 text-rose-600 rounded-2xl hover:bg-rose-100 font-bold transition-all flex items-center justify-center gap-2"
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+                                Delete Event
+                              </button>
+                          )}
                       </div>
                   </form>
               </div>
