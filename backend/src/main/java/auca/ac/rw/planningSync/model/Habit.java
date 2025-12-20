@@ -28,16 +28,18 @@ public class Habit {
 
     @Enumerated(EnumType.STRING)
     private DayOfWeek dayOfWeek;
-    
+
     @ManyToOne
     @JoinColumn(name = "user_id", referencedColumnName = "id")
     @JsonIgnore
     private User user;
 
     @OneToMany(mappedBy = "habit", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private List<HabitLog> logs = new ArrayList<>();
 
-    public Habit() {}
+    public Habit() {
+    }
 
     public Habit(UUID id, String name, String description, EHabitRecurrence recurrenceType, LocalTime timeOfDay,
             DayOfWeek dayOfWeek, User user, List<HabitLog> logs) {
@@ -118,6 +120,5 @@ public class Habit {
     public void addLog(LocalDate date, boolean completed) {
         logs.add(new HabitLog(date, completed, this));
     }
-    
-}
 
+}

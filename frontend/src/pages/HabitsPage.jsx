@@ -6,6 +6,7 @@ import HabitTimeline from '../components/HabitTimeline';
 export default function HabitsPage() {
   const { user } = useAuth();
   const [habits, setHabits] = useState([]);
+  const [todayLogs, setTodayLogs] = useState({}); // { habitId: boolean }
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   
@@ -17,11 +18,28 @@ export default function HabitsPage() {
     recurrenceType: 'DAILY' // Default
   });
 
+  const fetchTodayLogs = async (habitList) => {
+    const todayStr = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD
+    const logsMap = {};
+    await Promise.all(habitList.map(async (habit) => {
+        // We only need the most recent log to check today
+        const res = await authFetch(`/api/habitlog/by-habit/${habit.id}?size=1&sortBy=date&sortDir=desc`);
+        if (res.ok) {
+            const data = await res.json();
+            const lastLog = data.content[0];
+            logsMap[habit.id] = (lastLog && lastLog.date === todayStr && lastLog.completed);
+        }
+    }));
+    setTodayLogs(logsMap);
+  };
+
   const fetchHabits = async () => {
     try {
       const res = await authFetch(`/api/habits/allfrom/${user.username}`);
       if (res.ok) {
-        setHabits(await res.json());
+        const data = await res.json();
+        setHabits(data);
+        fetchTodayLogs(data);
       }
     } catch (error) {
       console.error("Error fetching habits:", error);
@@ -40,11 +58,13 @@ export default function HabitsPage() {
         method: 'POST'
       });
       if (res.ok) {
-        fetchHabits(); // Refresh to get updated logs
+        fetchHabits(); // Refresh to update everything
+        return true;
       }
     } catch (error) {
       console.error("Error toggling habit log:", error);
     }
+    return false;
   };
 
   const handleSubmit = async (e) => {
@@ -173,7 +193,8 @@ export default function HabitsPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {habits.length > 0 ? (
           habits.map((habit) => {
-            const isDoneToday = habit.logs?.some(l => l.date === todayStr && l.completed);
+            const isDoneToday = todayLogs[habit.id];
+            const todayStr = new Date().toLocaleDateString('en-CA');
             return (
               <div 
                 key={habit.id} 
