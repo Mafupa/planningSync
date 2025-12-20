@@ -15,7 +15,6 @@ import auca.ac.rw.planningSync.service.UserInfoService;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 
-
 @RestController
 @RequestMapping("/api/userinfo")
 public class UserInfoController {
@@ -25,10 +24,10 @@ public class UserInfoController {
 
     @GetMapping("/{username}")
     public ResponseEntity<?> getUserInfo(@PathVariable String username) {
-        
+
         UserInfo userInfo = userInfoService.getUserInfo(username);
         return new ResponseEntity<>(userInfo, HttpStatus.OK);
-    }    
+    }
 
     @PostMapping("/{username}")
     public ResponseEntity<?> addOrUpdateUserInfo(
