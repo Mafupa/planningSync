@@ -61,4 +61,10 @@ public class HabitLogController {
         Page<HabitLog> logs = habitLogService.getHabitLogsByUser(username, page, size, sortBy, sortDir);
         return new ResponseEntity<>(logs, HttpStatus.OK);
     }
+
+    @GetMapping("/streak/{habitId}")
+    public ResponseEntity<Integer> getStreak(@PathVariable UUID habitId) {
+        int streak = habitLogService.calculateStreak(habitId);
+        return new ResponseEntity<>(streak, HttpStatus.OK);
+    }
 }

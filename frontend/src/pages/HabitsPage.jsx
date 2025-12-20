@@ -7,6 +7,7 @@ export default function HabitsPage() {
   const { user } = useAuth();
   const [habits, setHabits] = useState([]);
   const [todayLogs, setTodayLogs] = useState({}); // { habitId: boolean }
+  const [streaks, setStreaks] = useState({}); // { habitId: number }
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   
@@ -18,11 +19,21 @@ export default function HabitsPage() {
     recurrenceType: 'DAILY' // Default
   });
 
+  const fetchStreaks = async (habitList) => {
+    const streaksMap = {};
+    await Promise.all(habitList.map(async (habit) => {
+        const res = await authFetch(`/api/habitlog/streak/${habit.id}`);
+        if (res.ok) {
+            streaksMap[habit.id] = await res.json();
+        }
+    }));
+    setStreaks(streaksMap);
+  };
+
   const fetchTodayLogs = async (habitList) => {
     const todayStr = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD
     const logsMap = {};
     await Promise.all(habitList.map(async (habit) => {
-        // We only need the most recent log to check today
         const res = await authFetch(`/api/habitlog/by-habit/${habit.id}?size=1&sortBy=date&sortDir=desc`);
         if (res.ok) {
             const data = await res.json();
@@ -40,6 +51,7 @@ export default function HabitsPage() {
         const data = await res.json();
         setHabits(data);
         fetchTodayLogs(data);
+        fetchStreaks(data);
       }
     } catch (error) {
       console.error("Error fetching habits:", error);
@@ -118,7 +130,7 @@ export default function HabitsPage() {
       </div>
 
       {/* Habit Timeline Component */}
-      <HabitTimeline habits={habits} onToggleLog={handleToggleLog} />
+      <HabitTimeline habits={habits} onToggleLog={handleToggleLog} streaks={streaks} />
 
       {showForm && (
         <div className="bg-white p-8 rounded-2xl shadow-xl shadow-indigo-50/50 border border-indigo-50 animate-in fade-in slide-in-from-top-4">
@@ -194,6 +206,7 @@ export default function HabitsPage() {
         {habits.length > 0 ? (
           habits.map((habit) => {
             const isDoneToday = todayLogs[habit.id];
+            const streak = streaks[habit.id] || 0;
             const todayStr = new Date().toLocaleDateString('en-CA');
             return (
               <div 
@@ -215,11 +228,29 @@ export default function HabitsPage() {
                         </svg>
                       )}
                     </div>
-                    <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-lg ${
-                      isDoneToday ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-50 text-gray-500'
-                    }`}>
-                      {habit.recurrenceType}
-                    </span>
+                    <div className="flex items-center space-x-2">
+                        {streak > 0 && (
+                            <span 
+                                className="flex items-center text-xs font-bold text-white px-2 py-1 rounded-lg"
+                                style={{ backgroundColor: (() => {
+                                    if (streak === 1) return '#10b981';
+                                    if (streak === 2) return '#eab308';
+                                    const ratio = Math.min((streak - 2) / 28, 1);
+                                    const r = Math.round(234 + (239 - 234) * ratio);
+                                    const g = Math.round(179 + (68 - 179) * ratio);
+                                    const b = Math.round(8 + (68 - 8) * ratio);
+                                    return `rgb(${r}, ${g}, ${b})`;
+                                })() }}
+                            >
+                                🔥 {streak}
+                            </span>
+                        )}
+                        <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-lg ${
+                        isDoneToday ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-50 text-gray-500'
+                        }`}>
+                        {habit.recurrenceType}
+                        </span>
+                    </div>
                   </div>
                   
                   <h3 className="text-xl font-bold text-gray-900 mb-2 truncate group-hover:text-indigo-600 transition-colors">

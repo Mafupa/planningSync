@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { authFetch } from '../utils/api';
 
-const HabitTimeline = ({ habits, onToggleLog }) => {
+const HabitTimeline = ({ habits, onToggleLog, streaks = {} }) => {
   const [daysRange, setDaysRange] = useState(14); // Default 2 weeks
   const [logs, setLogs] = useState({}); // { [habitId]: [ {date, completed}, ... ] }
   const [loading, setLoading] = useState(false);
@@ -55,6 +55,30 @@ const HabitTimeline = ({ habits, onToggleLog }) => {
 
   const isHabitDone = (habitId, dateStr) => {
     return logs[habitId]?.some(log => log.date === dateStr && log.completed);
+  };
+
+  const getStreakColor = (streak) => {
+    if (streak <= 0) return '#d1d5db'; // gray-300
+    if (streak === 1) return '#10b981'; // green-500
+    if (streak === 2) return '#eab308'; // yellow-500
+    
+    // Day 2 to 30: Yellow (234, 179, 8) -> Red (239, 68, 68)
+    const ratio = Math.min((streak - 2) / 28, 1);
+    const r = Math.round(234 + (239 - 234) * ratio);
+    const g = Math.round(179 + (68 - 179) * ratio);
+    const b = Math.round(8 + (68 - 8) * ratio);
+    return `rgb(${r}, ${g}, ${b})`;
+  };
+
+  const getShadowColor = (streak) => {
+    if (streak <= 0) return 'transparent';
+    if (streak === 1) return 'rgba(16, 185, 129, 0.2)';
+    if (streak === 2) return 'rgba(234, 179, 8, 0.2)';
+    const ratio = Math.min((streak - 2) / 28, 1);
+    const r = Math.round(234 + (239 - 234) * ratio);
+    const g = Math.round(179 + (68 - 179) * ratio);
+    const b = Math.round(8 + (68 - 8) * ratio);
+    return `rgba(${r}, ${g}, ${b}, 0.2)`;
   };
 
   const handleToggle = async (habitId, dateStr) => {
@@ -138,15 +162,18 @@ const HabitTimeline = ({ habits, onToggleLog }) => {
               <div className="w-full space-y-2">
                 {habits.map(habit => {
                   const done = isHabitDone(habit.id, dateStr);
+                  const streak = streaks[habit.id] || 0;
+                  const color = getStreakColor(streak);
+                  const shadow = getShadowColor(streak);
+                  
                   return (
                     <button
                       key={habit.id}
                       onClick={() => handleToggle(habit.id, dateStr)}
                       className={`w-full group relative flex items-center justify-center h-8 rounded-lg transition-all ${
-                        done 
-                          ? 'bg-emerald-500 text-white shadow-sm shadow-emerald-200' 
-                          : 'bg-gray-50 text-gray-300 hover:bg-gray-100 hover:text-gray-400'
+                        !done ? 'bg-gray-50 text-gray-300 hover:bg-gray-100 hover:text-gray-400' : 'text-white'
                       }`}
+                      style={done ? { backgroundColor: color, boxShadow: `0 4px 6px -1px ${shadow}, 0 2px 4px -1px ${shadow}` } : {}}
                       title={`${habit.name}: ${done ? 'Completed' : 'Not completed'}`}
                     >
                       {done ? (
@@ -158,7 +185,7 @@ const HabitTimeline = ({ habits, onToggleLog }) => {
                       )}
                       
                       <span className="absolute bottom-full mb-2 hidden group-hover:block bg-gray-800 text-white text-[10px] py-1 px-2 rounded whitespace-nowrap z-50">
-                        {habit.name}
+                        {habit.name} {streak > 0 && `(🔥 ${streak})`}
                       </span>
                     </button>
                   );

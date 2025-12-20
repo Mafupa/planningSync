@@ -1,6 +1,7 @@
 package auca.ac.rw.planningSync.repository;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -19,4 +20,6 @@ public interface HabitLogRepository extends JpaRepository<HabitLog, UUID> {
     Page<HabitLog> findByHabitUserUsername(String username, Pageable pageable);
 
     Optional<HabitLog> findByHabitIdAndDate(UUID habitId, LocalDate date);
+
+    List<HabitLog> findAllByHabitIdOrderByDateDesc(UUID habitId);
 }
