@@ -12,11 +12,15 @@ import AdminManagePage from './pages/AdminManagePage';
 import SettingsPage from './pages/SettingsPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 
-const ProtectedRoute = ({ children }) => {
+const ProtectedRoute = ({ children, adminOnly = false }) => {
   const { user, loading } = useAuth();
   
   if (loading) return <div>Loading...</div>;
   if (!user) return <Navigate to="/login" />;
+  
+  if (adminOnly && user.role !== 'ADMIN') {
+    return <Navigate to="/" />;
+  }
   
   return <Layout>{children}</Layout>;
 };
@@ -55,12 +59,12 @@ function App() {
 
         {/* Admin Routes */}
         <Route path="/admin" element={
-          <ProtectedRoute>
+          <ProtectedRoute adminOnly>
             <AdminDashboardPage />
           </ProtectedRoute>
         } />
         <Route path="/admin/manage" element={
-          <ProtectedRoute>
+          <ProtectedRoute adminOnly>
             <AdminManagePage />
           </ProtectedRoute>
         } />
