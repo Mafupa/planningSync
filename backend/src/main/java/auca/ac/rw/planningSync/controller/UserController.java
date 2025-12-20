@@ -11,12 +11,16 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import auca.ac.rw.planningSync.dto.LoginRequest;
+import auca.ac.rw.planningSync.dto.UpdateUserRequest;
 import auca.ac.rw.planningSync.model.User;
 import auca.ac.rw.planningSync.service.UserService;
 
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
 
 @RestController
 @RequestMapping(value = "/api/user")
@@ -43,8 +47,16 @@ public class UserController {
     }
 
     @DeleteMapping(value = "/{username}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> deleteUser(@PathVariable String username) {
         String message = userService.deleteUser(username);
+        return new ResponseEntity<>(message, HttpStatus.OK);
+    }
+
+    @PutMapping(value = "/{username}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> updateUser(@PathVariable String username, @RequestBody UpdateUserRequest updateRequest) {
+        String message = userService.updateUser(username, updateRequest.getPassword(), updateRequest.getVillageName());
         return new ResponseEntity<>(message, HttpStatus.OK);
     }
 
@@ -63,8 +75,12 @@ public class UserController {
 
     @GetMapping("/all")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> getAllUsers() {
-        return new ResponseEntity<>(userService.getAllUsers(), HttpStatus.OK);
+    public ResponseEntity<?> getAllUsers(
+            @RequestParam(required = false) String search,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return new ResponseEntity<>(userService.getAllUsers(search, pageable), HttpStatus.OK);
     }
 
     @PostMapping("/verify-2fa")

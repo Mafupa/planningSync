@@ -1,7 +1,5 @@
 package auca.ac.rw.planningSync.config;
 
-import org.springframework.security.config.Customizer;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -32,14 +30,16 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
-        return http.csrf(customizer -> customizer.disable()).authorizeHttpRequests(request -> request
-                .requestMatchers("/api/user/register").permitAll()
-                .requestMatchers("/api/user/login").permitAll()
-                .requestMatchers("/api/user/verify-2fa").permitAll()
-                .requestMatchers("/api/user/request-password-reset").permitAll()
-                .requestMatchers("/api/user/reset-password").permitAll()
-                .requestMatchers("/api/location/**").permitAll()
-                .anyRequest().authenticated()).httpBasic(Customizer.withDefaults())
+        return http.csrf(customizer -> customizer.disable())
+
+                .authorizeHttpRequests(request -> request
+                        .requestMatchers("/api/user/register").permitAll()
+                        .requestMatchers("/api/user/login").permitAll()
+                        .requestMatchers("/api/user/verify-2fa").permitAll()
+                        .requestMatchers("/api/user/request-password-reset").permitAll()
+                        .requestMatchers("/api/user/reset-password").permitAll()
+                        .requestMatchers("/api/location/**").permitAll()
+                        .anyRequest().authenticated())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();

@@ -10,6 +10,8 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -136,8 +138,34 @@ public class UserService {
         return "password_reset";
     }
 
-    public java.util.List<User> getAllUsers() {
-        return userRepository.findAll();
+    public Page<User> getAllUsers(String search, Pageable pageable) {
+        if (search != null && !search.trim().isEmpty()) {
+            return userRepository.searchUsers(search, pageable);
+        }
+        return userRepository.findAll(pageable);
+    }
+
+    public String updateUser(String username, String newPassword, String newVillageName) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "User not found with username: " + username));
+
+        if (newPassword != null && !newPassword.trim().isEmpty()) {
+            BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+            user.setPassword(passwordEncoder.encode(newPassword));
+        }
+
+        if (newVillageName != null && !newVillageName.trim().isEmpty()) {
+            Location village = locationRepository.findByName(newVillageName)
+                    .orElseThrow(() -> new ResponseStatusException(
+                            HttpStatus.NOT_FOUND,
+                            "Provided village/location does not exist"));
+            user.setVillage(village);
+        }
+
+        userRepository.save(user);
+        return "User updated successfully";
     }
 
     public String verifyTwoFactor(String username, String otp) {
