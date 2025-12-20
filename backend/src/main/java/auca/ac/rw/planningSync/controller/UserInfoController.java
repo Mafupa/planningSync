@@ -3,6 +3,7 @@ package auca.ac.rw.planningSync.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -23,6 +24,7 @@ public class UserInfoController {
     private UserInfoService userInfoService;
 
     @GetMapping("/{username}")
+    @PreAuthorize("hasRole('ADMIN') or #username == authentication.name")
     public ResponseEntity<?> getUserInfo(@PathVariable String username) {
 
         UserInfo userInfo = userInfoService.getUserInfo(username);
@@ -30,6 +32,7 @@ public class UserInfoController {
     }
 
     @PostMapping("/{username}")
+    @PreAuthorize("hasRole('ADMIN') or #username == authentication.name")
     public ResponseEntity<?> addOrUpdateUserInfo(
             @PathVariable String username,
             @RequestBody UserInfo userInfo) {
@@ -39,6 +42,7 @@ public class UserInfoController {
     }
 
     @DeleteMapping("/{username}")
+    @PreAuthorize("hasRole('ADMIN') or #username == authentication.name")
     public ResponseEntity<?> deleteUserInfo(@PathVariable String username) {
         String message = userInfoService.deleteUserInfo(username);
         return new ResponseEntity<>(message, HttpStatus.OK);

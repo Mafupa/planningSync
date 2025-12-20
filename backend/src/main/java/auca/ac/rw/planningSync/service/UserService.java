@@ -121,4 +121,8 @@ public class UserService {
         passwordResetOtpStorage.remove(email);
         return "password_reset";
     }
+
+    public java.util.List<User> getAllUsers() {
+        return userRepository.findAll();
+    }
 }
