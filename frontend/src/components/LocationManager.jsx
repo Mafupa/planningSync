@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { authFetch } from '../utils/api';
 
 const LocationManager = () => {
     const [locations, setLocations] = useState([]);
@@ -20,7 +21,7 @@ const LocationManager = () => {
 
     const fetchLocations = async () => {
         try {
-            const response = await fetch('/api/location/all');
+            const response = await authFetch('/api/location/all');
             if (response.ok) {
                 const data = await response.json();
                 setLocations(data);
@@ -81,7 +82,7 @@ const LocationManager = () => {
         }
 
         try {
-            const response = await fetch('/api/location/', {
+            const response = await authFetch('/api/location/', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)

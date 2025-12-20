@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import LocationSelector from './LocationSelector';
+import { authFetch } from '../utils/api';
 
 const UserManager = () => {
     const [users, setUsers] = useState([]);
@@ -21,7 +22,7 @@ const UserManager = () => {
 
     const fetchUsers = async () => {
         try {
-            const response = await fetch('/api/user/all'); // Assuming this endpoint exists, wait, `LocationController` has `getAllUsersFromLocation` but `UserController`?
+            const response = await authFetch('/api/user/all'); // Assuming this exists, wait, `LocationController` has `getAllUsersFromLocation` but `UserController`?
             // User.java exists, let's assume `UserController` or a generic endpoint exists.
             // If not, I'll need to use what's available or mocked. 
             // In AuthContext it calls `/api/user/{username}` to login.
@@ -56,7 +57,7 @@ const UserManager = () => {
                 village: formData.village
             };
             
-            const response = await fetch('/api/user/register', {
+            const response = await authFetch('/api/user/register', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)

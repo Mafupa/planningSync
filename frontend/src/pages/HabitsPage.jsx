@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { authFetch } from '../utils/api';
 
 export default function HabitsPage() {
   const { user } = useAuth();
@@ -18,7 +19,7 @@ export default function HabitsPage() {
   const fetchHabits = async () => {
     try {
       // Assuming GET /api/habits/allfrom/{username}
-      const res = await fetch(`/api/habits/allfrom/${user.username}`);
+      const res = await authFetch(`/api/habits/allfrom/${user.username}`);
       if (res.ok) {
         setHabits(await res.json());
       }
@@ -37,7 +38,7 @@ export default function HabitsPage() {
     e.preventDefault();
     try {
       // Assuming POST /api/habits/{username}
-      const res = await fetch(`/api/habits/${user.username}`, {
+      const res = await authFetch(`/api/habits/${user.username}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)

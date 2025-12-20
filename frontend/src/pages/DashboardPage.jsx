@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Link } from 'react-router-dom';
+import { authFetch } from '../utils/api';
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -13,7 +14,7 @@ export default function DashboardPage() {
       if (!user) return;
       try {
         // Fetch events: assuming GET /api/event/user/{userId} returns a Set of events
-        const eventsRes = await fetch(`/api/event/user/${user.id}`);
+        const eventsRes = await authFetch(`/api/event/user/${user.id}`);
         if (eventsRes.ok) {
             const eventsData = await eventsRes.json();
             // Sort by date (ascending) and take next 3
@@ -24,7 +25,7 @@ export default function DashboardPage() {
         }
 
         // Fetch habits: GET /api/habits/allfrom/{username}
-        const habitsRes = await fetch(`/api/habits/allfrom/${user.username}`);
+        const habitsRes = await authFetch(`/api/habits/allfrom/${user.username}`);
         if (habitsRes.ok) {
             const habitsData = await habitsRes.json();
             setHabits(Array.isArray(habitsData) ? habitsData : []);

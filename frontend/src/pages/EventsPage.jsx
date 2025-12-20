@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 
+import { authFetch } from '../utils/api';
+
 // Inline Icons (replacing lucide-react)
 const ChevronLeft = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>;
 const ChevronRight = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>;
@@ -29,7 +31,7 @@ export default function EventsPage() {
   // Fetch Events
   const fetchEvents = async () => {
     try {
-      const res = await fetch(`/api/event/user/${user.id}`);
+      const res = await authFetch(`/api/event/user/${user.id}`);
       if (res.ok) {
         const data = await res.json();
         setEvents(Array.isArray(data) ? data : []);
@@ -91,7 +93,7 @@ export default function EventsPage() {
 
     try {
       // Create event (using POST /create/{userId} from controller)
-      const res = await fetch(`/api/event/create/${user.id}`, {
+      const res = await authFetch(`/api/event/create/${user.id}`, {
         method: 'POST',
         headers: { 
             'Content-Type': 'application/json',
@@ -116,7 +118,7 @@ export default function EventsPage() {
   const handleDelete = async (eventId) => {
       if(!confirm("Are you sure you want to delete this event?")) return;
       try {
-          const res = await fetch(`/api/event/${eventId}`, { method: 'DELETE' });
+          const res = await authFetch(`/api/event/${eventId}`, { method: 'DELETE' });
           if(res.ok) fetchEvents();
       } catch (err) {
           console.error("Failed to delete", err);

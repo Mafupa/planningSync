@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { authFetch } from '../utils/api';
 
 const AdminDashboardPage = () => {
   const [stats, setStats] = useState({
@@ -18,8 +19,8 @@ const AdminDashboardPage = () => {
         try {
             // Parallel fetch for efficiency
             const [usersRes, locationsRes] = await Promise.all([
-                fetch('/api/user/all').catch(() => ({ ok: false })), // Assuming this exists or I'll add it/mock it
-                fetch('/api/location/all').catch(() => ({ ok: false }))
+                authFetch('/api/user/all').catch(() => ({ ok: false })), // Assuming this exists or I'll add it/mock it
+                authFetch('/api/location/all').catch(() => ({ ok: false }))
             ]);
 
             const users = usersRes.ok ? await usersRes.json() : [];

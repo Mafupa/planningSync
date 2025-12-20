@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { authFetch } from '../utils/api';
 
 const LocationSelector = ({ onLocationSelect }) => {
     // Props: onLocationSelect(villageId) - called when a village is selected
@@ -25,7 +26,7 @@ const LocationSelector = ({ onLocationSelect }) => {
     useEffect(() => {
         const fetchLocations = async () => {
             try {
-                const response = await fetch('/api/location/all');
+                const response = await authFetch('/api/location/all');
                 if (response.ok) {
                     const data = await response.json();
                     setAllLocations(data);
