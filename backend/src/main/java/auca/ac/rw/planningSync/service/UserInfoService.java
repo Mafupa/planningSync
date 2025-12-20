@@ -35,11 +35,13 @@ public class UserInfoService {
 
                 UserInfo userInfo = userInfoRepository.findByUserId(user.getId()).orElse(new UserInfo());
 
-                if (userInfoRepository.findByEmail(newInfo.getEmail()).isPresent()) {
-                        throw new ResponseStatusException(
-                                        HttpStatus.BAD_REQUEST,
-                                        "Email already signed up!");
-                }
+                userInfoRepository.findByEmail(newInfo.getEmail()).ifPresent(existingInfo -> {
+                        if (!existingInfo.getUser().getId().equals(user.getId())) {
+                                throw new ResponseStatusException(
+                                                HttpStatus.BAD_REQUEST,
+                                                "Email already signed up!");
+                        }
+                });
 
                 userInfo.setEmail(newInfo.getEmail());
                 userInfo.setPhone(newInfo.getPhone());

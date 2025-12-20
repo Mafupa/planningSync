@@ -45,7 +45,8 @@ export default function SettingsPage() {
       if (res.ok) {
         setMessage('Settings updated successfully!');
       } else {
-        setMessage('Failed to update settings.');
+        const errorText = await res.text();
+        setMessage(errorText || 'Failed to update settings.');
       }
     } catch (err) {
       console.error(err);

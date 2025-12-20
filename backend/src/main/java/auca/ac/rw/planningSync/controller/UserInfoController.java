@@ -24,17 +24,17 @@ public class UserInfoController {
     private UserInfoService userInfoService;
 
     @GetMapping("/{username}")
-    @PreAuthorize("hasRole('ADMIN') or #username == authentication.name")
-    public ResponseEntity<?> getUserInfo(@PathVariable String username) {
+    @PreAuthorize("hasRole('ADMIN') or authentication.name == #username")
+    public ResponseEntity<?> getUserInfo(@PathVariable("username") String username) {
 
         UserInfo userInfo = userInfoService.getUserInfo(username);
         return new ResponseEntity<>(userInfo, HttpStatus.OK);
     }
 
     @PostMapping("/{username}")
-    @PreAuthorize("hasRole('ADMIN') or #username == authentication.name")
+    @PreAuthorize("hasRole('ADMIN') or authentication.name == #username")
     public ResponseEntity<?> addOrUpdateUserInfo(
-            @PathVariable String username,
+            @PathVariable("username") String username,
             @RequestBody UserInfo userInfo) {
 
         String message = userInfoService.addOrUpdateUserInfo(username, userInfo);
@@ -42,8 +42,8 @@ public class UserInfoController {
     }
 
     @DeleteMapping("/{username}")
-    @PreAuthorize("hasRole('ADMIN') or #username == authentication.name")
-    public ResponseEntity<?> deleteUserInfo(@PathVariable String username) {
+    @PreAuthorize("hasRole('ADMIN') or authentication.name == #username")
+    public ResponseEntity<?> deleteUserInfo(@PathVariable("username") String username) {
         String message = userInfoService.deleteUserInfo(username);
         return new ResponseEntity<>(message, HttpStatus.OK);
     }
