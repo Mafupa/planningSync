@@ -12,57 +12,63 @@ import auca.ac.rw.planningSync.repository.UserRepository;
 
 @Service
 public class UserInfoService {
-    @Autowired
-    private UserRepository userRepository;
+        @Autowired
+        private UserRepository userRepository;
 
-    @Autowired
-    private UserInfoRepository userInfoRepository;
+        @Autowired
+        private UserInfoRepository userInfoRepository;
 
-    public UserInfo getUserInfo(String username) {
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "User not found with username: " + username));
-        return userInfoRepository.findByUserId(user.getId())
-                .orElseThrow(() -> new RuntimeException("UserInfo not found for user: " + username));
-    }
+        public UserInfo getUserInfo(String username) {
+                User user = userRepository.findByUsername(username)
+                                .orElseThrow(() -> new ResponseStatusException(
+                                                HttpStatus.NOT_FOUND,
+                                                "User not found with username: " + username));
+                return userInfoRepository.findByUserId(user.getId())
+                                .orElseThrow(() -> new RuntimeException("UserInfo not found for user: " + username));
+        }
 
-    public String addOrUpdateUserInfo(String username, UserInfo newInfo) {
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "No user with this username!"));
+        public String addOrUpdateUserInfo(String username, UserInfo newInfo) {
+                User user = userRepository.findByUsername(username)
+                                .orElseThrow(() -> new ResponseStatusException(
+                                                HttpStatus.NOT_FOUND,
+                                                "No user with this username!"));
 
-        UserInfo userInfo = userInfoRepository.findByUserId(user.getId()).orElse(new UserInfo());
+                UserInfo userInfo = userInfoRepository.findByUserId(user.getId()).orElse(new UserInfo());
 
-        userInfo.setEmail(newInfo.getEmail());
-        userInfo.setPhone(newInfo.getPhone());
-        userInfo.setTwoFactorEnabled(newInfo.isTwoFactorEnabled());
+                if (userInfoRepository.findByEmail(newInfo.getEmail()).isPresent()) {
+                        throw new ResponseStatusException(
+                                        HttpStatus.BAD_REQUEST,
+                                        "Email already signed up!");
+                }
 
-        userInfo.setUser(user);
-        user.setUserInfo(userInfo);
+                userInfo.setEmail(newInfo.getEmail());
+                userInfo.setPhone(newInfo.getPhone());
+                userInfo.setTwoFactorEnabled(newInfo.isTwoFactorEnabled());
 
-        userInfoRepository.save(userInfo);
+                userInfo.setUser(user);
+                user.setUserInfo(userInfo);
 
-        return "User's information saved successfully";
-    }
+                userInfoRepository.save(userInfo);
 
-    public String deleteUserInfo(String username) {
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "User not found with username: " + username));
-        UserInfo userInfo = userInfoRepository.findByUserId(user.getId())
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "UserInfo not found for user: " + username));
+                return "User's information saved successfully";
+        }
 
-        userInfoRepository.delete(userInfo);
+        public String deleteUserInfo(String username) {
+                User user = userRepository.findByUsername(username)
+                                .orElseThrow(() -> new ResponseStatusException(
+                                                HttpStatus.NOT_FOUND,
+                                                "User not found with username: " + username));
+                UserInfo userInfo = userInfoRepository.findByUserId(user.getId())
+                                .orElseThrow(() -> new ResponseStatusException(
+                                                HttpStatus.NOT_FOUND,
+                                                "UserInfo not found for user: " + username));
 
-        user.setUserInfo(null);
-        userRepository.save(user);
+                userInfoRepository.delete(userInfo);
 
-        return "User info deleted successfully for user: " + username;
-    }
+                user.setUserInfo(null);
+                userRepository.save(user);
+
+                return "User info deleted successfully for user: " + username;
+        }
 
 }

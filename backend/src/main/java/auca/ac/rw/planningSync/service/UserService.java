@@ -129,7 +129,8 @@ public class UserService {
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         "User not found with email: " + email));
-        user.setPassword(newPassword);
+        BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+        user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
         passwordResetOtpStorage.remove(email);
         return "password_reset";

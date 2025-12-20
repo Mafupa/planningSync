@@ -10,6 +10,7 @@ import HabitsPage from './pages/HabitsPage';
 import AdminDashboardPage from './pages/AdminDashboardPage';
 import AdminManagePage from './pages/AdminManagePage';
 import SettingsPage from './pages/SettingsPage';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -26,6 +27,7 @@ function App() {
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         
         <Route path="/" element={
           <ProtectedRoute>

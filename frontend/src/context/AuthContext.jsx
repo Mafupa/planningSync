@@ -130,8 +130,40 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('token');
   };
 
+  const requestPasswordReset = async (email) => {
+    try {
+      const response = await fetch(`/api/user/request-password-reset?email=${encodeURIComponent(email)}`, {
+        method: 'POST'
+      });
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(text || 'Failed to request password reset');
+      }
+      return true;
+    } catch (error) {
+      console.error("Request reset error:", error);
+      throw error;
+    }
+  };
+
+  const resetPassword = async (email, password, otp) => {
+    try {
+      const response = await fetch(`/api/user/reset-password?email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}&otp=${encodeURIComponent(otp)}`, {
+        method: 'POST'
+      });
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(text || 'Failed to reset password');
+      }
+      return true;
+    } catch (error) {
+      console.error("Reset password error:", error);
+      throw error;
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, login, signup, logout, loading, verify2FA }}>
+    <AuthContext.Provider value={{ user, login, signup, logout, loading, verify2FA, requestPasswordReset, resetPassword }}>
       {children}
     </AuthContext.Provider>
   );

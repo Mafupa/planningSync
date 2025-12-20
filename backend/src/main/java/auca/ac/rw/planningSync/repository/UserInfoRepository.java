@@ -9,7 +9,9 @@ import org.springframework.stereotype.Repository;
 import auca.ac.rw.planningSync.model.UserInfo;
 
 @Repository
-public interface UserInfoRepository  extends JpaRepository<UserInfo, UUID>{
+public interface UserInfoRepository extends JpaRepository<UserInfo, UUID> {
 
     Optional<UserInfo> findByUserId(UUID userId);
+
+    Optional<UserInfo> findByEmail(String email);
 }

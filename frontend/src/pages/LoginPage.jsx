@@ -76,6 +76,14 @@ export default function LoginPage() {
                 placeholder="••••••••"
               />
             </div>
+
+            <div className="flex items-center justify-end">
+              <div className="text-sm">
+                <Link to="/forgot-password" weights="font-medium" className="font-medium text-indigo-600 hover:text-indigo-500">
+                  Forgot password?
+                </Link>
+              </div>
+            </div>
             </>
             )}
 
