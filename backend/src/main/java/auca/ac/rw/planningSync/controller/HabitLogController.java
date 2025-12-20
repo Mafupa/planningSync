@@ -1,34 +1,40 @@
 package auca.ac.rw.planningSync.controller;
 
+import java.time.LocalDate;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import auca.ac.rw.planningSync.model.HabitLog;
 import auca.ac.rw.planningSync.service.HabitLogService;
 
 @RestController
-@RequestMapping(value="/api/habitlog")
+@RequestMapping(value = "/api/habitlog")
 public class HabitLogController {
 
     @Autowired
     private HabitLogService habitLogService;
 
-    @PostMapping(value="/{habitId}")
+    @PostMapping(value = "/{habitId}")
     public ResponseEntity<?> addHabitLog(
             @PathVariable UUID habitId,
             @RequestBody HabitLog habitLog) {
         String message = habitLogService.addHabitLog(habitId, habitLog);
+        return new ResponseEntity<>(message, HttpStatus.OK);
+    }
+
+    @PostMapping("/toggle/{habitId}")
+    public ResponseEntity<?> toggleHabitLog(
+            @PathVariable UUID habitId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+
+        LocalDate toggleDate = (date != null) ? date : LocalDate.now();
+        String message = habitLogService.toggleHabitLog(habitId, toggleDate);
         return new ResponseEntity<>(message, HttpStatus.OK);
     }
 

@@ -1,5 +1,7 @@
 package auca.ac.rw.planningSync.service;
 
+import java.time.LocalDate;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,16 +27,13 @@ public class HabitLogService {
     private HabitLogRepository habitLogRepository;
 
     public Page<HabitLog> getHabitLogsByHabit(UUID habitId, int page,
-     int size, String sortBy, String sortDir) {
-        
-        Habit habit = habitRepository.findById(habitId)
-            .orElseThrow(() -> new ResponseStatusException(
-                HttpStatus.NOT_FOUND, "Habit with ID " + habitId + " not found"
-            ));
+            int size, String sortBy, String sortDir) {
 
-        Sort sort = sortDir.equalsIgnoreCase("desc") ?
-                Sort.by(sortBy).descending() :
-                Sort.by(sortBy).ascending();
+        Habit habit = habitRepository.findById(habitId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Habit with ID " + habitId + " not found"));
+
+        Sort sort = sortDir.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
 
         Pageable pageable = PageRequest.of(page, size, sort);
 
@@ -42,26 +41,43 @@ public class HabitLogService {
     }
 
     public Page<HabitLog> getHabitLogsByUser(
-        String username, int page, int size, String sortBy, String sortDir) {
+            String username, int page, int size, String sortBy, String sortDir) {
 
-        Sort sort = sortDir.equalsIgnoreCase("desc") ?
-                Sort.by(sortBy).descending() :
-                Sort.by(sortBy).ascending();
+        Sort sort = sortDir.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
 
         Pageable pageable = PageRequest.of(page, size, sort);
 
         return habitLogRepository.findByHabitUserUsername(username, pageable);
     }
 
-    public String addHabitLog(UUID habitId, HabitLog habitLog){
+    public String addHabitLog(UUID habitId, HabitLog habitLog) {
         Habit habit = habitRepository.findById(habitId)
-        .orElseThrow(() -> new ResponseStatusException(
-            HttpStatus.NOT_FOUND,
-            "No habit with this id found!"
-        ));
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "No habit with this id found!"));
         habitLog.setHabit(habit);
         habitLogRepository.save(habitLog);
         return "Log successfully saved!";
     }
-    
+
+    public String toggleHabitLog(UUID habitId, LocalDate date) {
+        Habit habit = habitRepository.findById(habitId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Habit not found"));
+
+        Optional<HabitLog> existingLog = habitLogRepository.findByHabitIdAndDate(habitId, date);
+
+        if (existingLog.isPresent()) {
+            HabitLog log = existingLog.get();
+            log.setCompleted(!log.isCompleted());
+            habitLogRepository.save(log);
+            return "Log updated";
+        } else {
+            HabitLog newLog = new HabitLog(date, true, habit);
+            habitLogRepository.save(newLog);
+            return "Log created";
+        }
+    }
+
 }

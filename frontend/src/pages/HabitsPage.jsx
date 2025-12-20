@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { authFetch } from '../utils/api';
+import HabitTimeline from '../components/HabitTimeline';
 
 export default function HabitsPage() {
   const { user } = useAuth();
@@ -18,7 +19,6 @@ export default function HabitsPage() {
 
   const fetchHabits = async () => {
     try {
-      // Assuming GET /api/habits/allfrom/{username}
       const res = await authFetch(`/api/habits/allfrom/${user.username}`);
       if (res.ok) {
         setHabits(await res.json());
@@ -34,10 +34,22 @@ export default function HabitsPage() {
     if (user) fetchHabits();
   }, [user]);
 
+  const handleToggleLog = async (habitId, date) => {
+    try {
+      const res = await authFetch(`/api/habitlog/toggle/${habitId}?date=${date}`, {
+        method: 'POST'
+      });
+      if (res.ok) {
+        fetchHabits(); // Refresh to get updated logs
+      }
+    } catch (error) {
+      console.error("Error toggling habit log:", error);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      // Assuming POST /api/habits/{username}
       const res = await authFetch(`/api/habits/${user.username}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -59,114 +71,176 @@ export default function HabitsPage() {
 
   if (loading) return <div className="p-8 text-center">Loading habits...</div>;
 
+  const todayStr = new Date().toISOString().split('T')[0];
+
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-           <h1 className="text-2xl font-bold text-gray-900">Habits</h1>
-           <p className="text-gray-500 text-sm">Build consistency with daily tracking.</p>
+           <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">Daily Habits</h1>
+           <p className="text-gray-500 mt-1">Consistency is the key to excellence.</p>
         </div>
         <button
           onClick={() => setShowForm(!showForm)}
-          className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+          className={`inline-flex items-center px-6 py-3 border border-transparent rounded-xl shadow-sm text-sm font-semibold text-white transition-all ${
+            showForm ? 'bg-gray-400 hover:bg-gray-500' : 'bg-indigo-600 hover:bg-indigo-700 hover:shadow-indigo-100 hover:shadow-lg'
+          }`}
         >
-          {showForm ? 'Cancel' : 'Add Habit'}
+          {showForm ? 'Cancel' : (
+            <>
+              <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              New Habit
+            </>
+          )}
         </button>
       </div>
 
+      {/* Habit Timeline Component */}
+      <HabitTimeline habits={habits} onToggleLog={handleToggleLog} />
+
       {showForm && (
-        <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
-          <h2 className="text-lg font-medium text-gray-900 mb-4">New Habit</h2>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Habit Name</label>
+        <div className="bg-white p-8 rounded-2xl shadow-xl shadow-indigo-50/50 border border-indigo-50 animate-in fade-in slide-in-from-top-4">
+          <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
+            <div className="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center mr-3">
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+            </div>
+            Create New Habit
+          </h2>
+          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="md:col-span-2">
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Habit Name</label>
               <input
                 type="text"
                 name="name"
                 required
                 value={formData.name}
                 onChange={handleChange}
-                placeholder="e.g., Read 30 mins"
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 border"
+                placeholder="e.g., Morning Meditation"
+                className="block w-full rounded-xl border-gray-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-4 py-3 border transition-all"
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Description</label>
+            <div className="md:col-span-2">
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Description (Optional)</label>
               <textarea
                 name="description"
-                rows={2}
+                rows={3}
                 value={formData.description}
                 onChange={handleChange}
                 placeholder="Why do you want to build this habit?"
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 border"
+                className="block w-full rounded-xl border-gray-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-4 py-3 border transition-all"
               />
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                   <label className="block text-sm font-medium text-gray-700">Time of Day</label>
-                   <input
-                        type="time"
-                        name="timeOfDay"
-                        required
-                        value={formData.timeOfDay}
-                        onChange={handleChange}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 border"
-                    />
-                </div>
-                <div>
-                   <label className="block text-sm font-medium text-gray-700">Recurrence</label>
-                   <select
-                        name="recurrenceType"
-                        value={formData.recurrenceType}
-                        onChange={handleChange}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 border"
-                   >
-                       <option value="DAILY">Daily</option>
-                       <option value="WEEKLY">Weekly</option>
-                       {/* Add other backend supported enums if needed */}
-                   </select>
-                </div>
+            <div>
+               <label className="block text-sm font-semibold text-gray-700 mb-1">Preferred Time</label>
+               <input
+                    type="time"
+                    name="timeOfDay"
+                    required
+                    value={formData.timeOfDay}
+                    onChange={handleChange}
+                    className="block w-full rounded-xl border-gray-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-4 py-3 border transition-all"
+                />
+            </div>
+            <div>
+               <label className="block text-sm font-semibold text-gray-700 mb-1">Recurrence</label>
+               <select
+                    name="recurrenceType"
+                    value={formData.recurrenceType}
+                    onChange={handleChange}
+                    className="block w-full rounded-xl border-gray-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-4 py-3 border transition-all"
+               >
+                   <option value="DAILY">Every Day</option>
+                   <option value="WEEKLY">Once a Week</option>
+               </select>
             </div>
             
-            <div className="pt-2">
+            <div className="md:col-span-2 pt-4">
               <button
                 type="submit"
-                className="w-full inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                className="w-full inline-flex justify-center py-4 px-6 border border-transparent shadow-lg shadow-indigo-100 text-base font-bold rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all transform hover:-translate-y-0.5 active:translate-y-0"
               >
-                Start Tracking
+                Start Journey
               </button>
             </div>
           </form>
         </div>
       )}
 
-      <div className="bg-white shadow overflow-hidden rounded-md border border-gray-200">
-        <ul className="divide-y divide-gray-200">
-          {habits.length > 0 ? (
-            habits.map((habit) => (
-              <li key={habit.id} className="p-6 hover:bg-gray-50 transition">
-                <div className="flex items-center justify-between">
-                   <div>
-                        <div className="flex items-center space-x-3">
-                            <h3 className="text-lg font-medium text-indigo-600 truncate">{habit.name}</h3>
-                            <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full uppercase tracking-wide">
-                                {habit.recurrenceType}
-                            </span>
-                        </div>
-                        <p className="mt-1 text-sm text-gray-500">
-                            {habit.description}
-                        </p>
-                        <p className="mt-2 text-sm text-gray-600 flex items-center">
-                           <span className="mr-2">⏰ {habit.timeOfDay}</span>
-                        </p>
-                   </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {habits.length > 0 ? (
+          habits.map((habit) => {
+            const isDoneToday = habit.logs?.some(l => l.date === todayStr && l.completed);
+            return (
+              <div 
+                key={habit.id} 
+                className={`group relative bg-white p-6 rounded-2xl border transition-all hover:shadow-xl hover:shadow-gray-100 ${
+                  isDoneToday ? 'border-emerald-100 bg-emerald-50/10' : 'border-gray-100'
+                }`}
+              >
+                <div className="flex flex-col h-full">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className={`p-2 rounded-xl ${isDoneToday ? 'bg-emerald-100 text-emerald-600' : 'bg-indigo-50 text-indigo-600'}`}>
+                      {isDoneToday ? (
+                        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                      ) : (
+                        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      )}
+                    </div>
+                    <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-lg ${
+                      isDoneToday ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-50 text-gray-500'
+                    }`}>
+                      {habit.recurrenceType}
+                    </span>
+                  </div>
+                  
+                  <h3 className="text-xl font-bold text-gray-900 mb-2 truncate group-hover:text-indigo-600 transition-colors">
+                    {habit.name}
+                  </h3>
+                  <p className="text-sm text-gray-500 mb-6 line-clamp-2 min-h-[2.5rem]">
+                    {habit.description || "No description provided."}
+                  </p>
+                  
+                  <div className="mt-auto flex items-center justify-between">
+                    <div className="flex items-center text-sm font-medium text-gray-400">
+                      <svg className="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      {habit.timeOfDay}
+                    </div>
+                    
+                    <button
+                      onClick={() => handleToggleLog(habit.id, todayStr)}
+                      className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                        isDoneToday 
+                          ? 'bg-emerald-500 text-white hover:bg-emerald-600' 
+                          : 'bg-white border-2 border-indigo-600 text-indigo-600 hover:bg-indigo-600 hover:text-white'
+                      }`}
+                    >
+                      {isDoneToday ? 'Completed' : 'Done Today?'}
+                    </button>
+                  </div>
                 </div>
-              </li>
-            ))
-          ) : (
-            <li className="p-6 text-center text-gray-500">No habits yet. Add one to get started!</li>
-          )}
-        </ul>
+              </div>
+            );
+          })
+        ) : (
+          <div className="col-span-full py-20 bg-gray-50/50 rounded-3xl border-2 border-dashed border-gray-200 text-center">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-white shadow-sm mb-4">
+              <svg className="w-8 h-8 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+              </svg>
+            </div>
+            <p className="text-gray-500 font-medium">No habits yet. Let's start building!</p>
+          </div>
+        )}
       </div>
     </div>
   );
