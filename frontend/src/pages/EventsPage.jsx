@@ -14,21 +14,18 @@ export default function EventsPage() {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   
-  // Calendar State
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
   
-  // Modal State
   const [showModal, setShowModal] = useState(false);
   const [editingEvent, setEditingEvent] = useState(null);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    time: '09:00', // Default time
+    time: '09:00',
     publicEvent: false
   });
 
-  // Fetch Events
   const fetchEvents = async () => {
     try {
       const res = await authFetch(`/api/event/user/${user.id}`);
@@ -158,7 +155,6 @@ export default function EventsPage() {
 
     // Empty cells for previous month
     for (let i = 0; i < startDay; i++) {
-        // Use bg-gray-50 for empty cells, no border since parent has gap
       days.push(<div key={`empty-${i}`} className="bg-gray-50/50"></div>);
     }
 
@@ -195,7 +191,7 @@ export default function EventsPage() {
 
   return (
     <div className="flex flex-col lg:flex-row h-[calc(100vh-100px)] gap-6 p-4">
-      {/* Left: Calendar (2/3 width) */}
+      {/* Left: Calendar  */}
       <div className="flex-1 lg:flex-[2] bg-white rounded-2xl shadow-lg border border-gray-100 flex flex-col overflow-hidden">
         {/* Calendar Header */}
         <div className="p-6 flex items-center justify-between border-b border-gray-100">
@@ -222,7 +218,7 @@ export default function EventsPage() {
         </div>
       </div>
 
-      {/* Right: Day Panel (1/3 width) */}
+      {/* Right: Day Panel */}
       <div className="flex-1 lg:flex-1 bg-white rounded-2xl shadow-lg border border-gray-100 flex flex-col overflow-hidden">
          <div className="p-6 border-b border-gray-100 bg-gradient-to-br from-indigo-600 to-purple-600 text-white">
              <div className="text-indigo-100 text-sm font-medium uppercase tracking-wide">

@@ -6,20 +6,14 @@ const AdminDashboardPage = () => {
   const [stats, setStats] = useState({
     users: 0,
     locations: 0,
-    events: 0 // If available
+    events: 0
   });
 
   useEffect(() => {
-    // Ideally fetch stats from a backend endpoint. 
-    // For now we can just fetch lists and count length if endpoints exist, 
-    // or just leave as placeholders/simulate.
-    
-    // Simulating fetching stats or fetching lists to count
     const fetchStats = async () => {
         try {
-            // Parallel fetch for efficiency
             const [usersRes, locationsRes] = await Promise.all([
-                authFetch('/api/user/all').catch(() => ({ ok: false })), // Assuming this exists or I'll add it/mock it
+                authFetch('/api/user/all').catch(() => ({ ok: false })),
                 authFetch('/api/location/all').catch(() => ({ ok: false }))
             ]);
 

@@ -13,18 +13,15 @@ export default function DashboardPage() {
     const fetchData = async () => {
       if (!user) return;
       try {
-        // Fetch events: assuming GET /api/event/user/{userId} returns a Set of events
         const eventsRes = await authFetch(`/api/event/user/${user.id}`);
         if (eventsRes.ok) {
             const eventsData = await eventsRes.json();
-            // Sort by date (ascending) and take next 3
             const sortedEvents = Array.isArray(eventsData) 
                 ? eventsData.sort((a, b) => new Date(a.date) - new Date(b.date))
                 : [];
             setEvents(sortedEvents.slice(0, 3));
         }
 
-        // Fetch habits: GET /api/habits/allfrom/{username}
         const habitsRes = await authFetch(`/api/habits/allfrom/${user.username}`);
         if (habitsRes.ok) {
             const habitsData = await habitsRes.json();
@@ -81,7 +78,7 @@ export default function DashboardPage() {
                     <div className="flex-1 space-y-1">
                       <div className="flex items-center justify-between">
                         <h3 className="text-sm font-medium">{event.title}</h3>
-                        <p className="text-sm text-gray-500">{event.date} {event.time}</p>
+                        <p className="text-sm text-gray-500">{new Date(event.dateTime).toLocaleDateString()}</p>
                       </div>
                       <p className="text-sm text-gray-500">{event.description}</p>
                     </div>
@@ -105,7 +102,7 @@ export default function DashboardPage() {
               {habits.map((habit) => (
                 <li key={habit.id} className="py-4 flex items-center justify-between">
                   <div>
-                    <h3 className="text-sm font-medium text-gray-900">{habit.title}</h3>
+                    <h3 className="text-sm font-medium text-gray-900">{habit.name}</h3>
                     <p className="text-xs text-gray-500">{habit.description}</p>
                   </div>
                   <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
