@@ -6,6 +6,10 @@ import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -26,6 +30,12 @@ public class UserService {
 
     @Autowired
     private EmailService emailService;
+
+    @Autowired
+    AuthenticationManager authManager;
+
+    @Autowired
+    private JWTService jwtService;
 
     private Map<String, String> passwordResetOtpStorage = new HashMap<>();
 
@@ -50,6 +60,9 @@ public class UserService {
                     "User must have a village name");
         }
 
+        BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+
         Location village = locationRepository.findByName(user.getVillage().getName())
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
@@ -59,6 +72,15 @@ public class UserService {
         userRepository.save(user);
 
         return "User saved successfully";
+    }
+
+    public String loginUser(String username, String password) {
+        Authentication authentication = authManager.authenticate(
+                new UsernamePasswordAuthenticationToken(username, password));
+        if (authentication.isAuthenticated()) {
+            return jwtService.generateToken(username);
+        }
+        return "Invalid credentials";
     }
 
     public String deleteUser(String username) {

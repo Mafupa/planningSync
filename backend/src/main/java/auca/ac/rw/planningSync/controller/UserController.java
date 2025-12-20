@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import auca.ac.rw.planningSync.dto.LoginRequest;
 import auca.ac.rw.planningSync.model.User;
 import auca.ac.rw.planningSync.service.UserService;
 
@@ -31,6 +32,12 @@ public class UserController {
     @PostMapping(value = "/register")
     public ResponseEntity<?> registerUser(@RequestBody User user) {
         String message = userService.registerUser(user);
+        return new ResponseEntity<>(message, HttpStatus.OK);
+    }
+
+    @PostMapping(value = "/login")
+    public ResponseEntity<?> loginUser(@RequestBody LoginRequest loginRequest) {
+        String message = userService.loginUser(loginRequest.getUsername(), loginRequest.getPassword());
         return new ResponseEntity<>(message, HttpStatus.OK);
     }
 
